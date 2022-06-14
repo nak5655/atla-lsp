@@ -1,0 +1,46 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Newtonsoft.Json;
+
+namespace Atla.LanguageServer
+{
+    [JsonObject]
+    public class Notification {
+        [JsonProperty]
+        public method: string;
+        [JsonProperty("params")]
+        public _params: object;
+        
+        public this(method: string, _params: object) {
+            this.method = method;
+            this._params = _params;
+        }
+    }
+    
+    public enum MessageType {
+        | Error = 1
+        | Warning = 2
+        | Info = 3
+        | Log = 4
+    }
+    
+    [JsonObject]
+    public class LogMessageParams {
+        [JsonProperty]
+        public type: int;
+        [JsonProperty]
+        public message: string;
+        
+        public this(type: MessageType, message: string) {
+            this.type = type :> int;
+            this.message = message;
+        }
+    }
+}

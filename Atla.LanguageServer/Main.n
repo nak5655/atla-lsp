@@ -19,7 +19,10 @@ module Program
             def req = LSPRequestMessage.waitMessage();
             
             match (req.method()) {
-                | "initialize" => server.initialize(req).sendMessage();
+                | "initialize" => {
+                    server.initialize(req).sendMessage();
+                    LSPNotificationMessage.windowLogMessage("initialized", MessageType.Info).sendMessage();
+                }
                 | _ => {}
             }
         }

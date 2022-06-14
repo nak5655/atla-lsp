@@ -14,8 +14,6 @@ namespace Atla.LanguageServer
     [JsonObject]
     public class Response {
         [JsonProperty]
-        public jsonrpc: string = "2.0";
-        [JsonProperty]
         public id: int;
         [JsonProperty]
         public result: object;
@@ -40,7 +38,7 @@ namespace Atla.LanguageServer
         public mutable documentHighlightProvider: bool = false;
     }
     
-    [JsonObject("ServerInfo")]
+    [JsonObject]
     public class ServerInfo {
         [JsonProperty]
         public mutable name: string;

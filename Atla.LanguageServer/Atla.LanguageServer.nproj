@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Atla.LanguageServer</RootNamespace>
-    <AssemblyName>atla-ls</AssemblyName>
+    <AssemblyName>atla-lsp</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NoStdLib>true</NoStdLib>
@@ -70,7 +70,13 @@
     <Compile Include="LSPMessage.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LSPUtils.n">
+    <Compile Include="LSPNotificationUtils.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LSPNotificationMessage.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LSPResponseUtils.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LSPResponseMessage.n">

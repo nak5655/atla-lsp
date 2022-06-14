@@ -9,12 +9,39 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Atla.LanguageServer
 {
-    public interface LSPMessage
+    public abstract class LSPMessage
     {
+        public mutable headers: Hashtable[string, string] = Hashtable();
+        public mutable content: JObject;
         
+        public id(): int {
+            int.Parse(content["id"].ToString())
+        }
+        
+        public method(): string {
+            content["method"].ToString()
+        }
+        
+        public calcContentLength(): void {
+            headers.Add("Content-Length", Encoding.UTF8.GetBytes(content.ToString(Formatting.None)).Length.ToString());
+        }
+        
+        public sendMessage(): void {
+            content.Add(JProperty("jsonrpc", "2.0"));
+            
+            calcContentLength();
+            
+            foreach((key, value) in headers.KeyValuePairs) {
+                Console.WriteLine($"$(key): $(value)");
+            }
+            Console.WriteLine();
+            
+            Console.Write(content.ToString(Formatting.None));
+        }
     }
 }

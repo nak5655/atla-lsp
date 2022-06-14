@@ -15,20 +15,9 @@ namespace Atla.LanguageServer
 {
     public class LSPRequestMessage: LSPMessage
     {
-        public headers: Hashtable[string, string];
-        public content: JObject;
-        
         public this(headers: Hashtable[string, string], content: JObject) {
             this.headers = headers;
             this.content = content;
-        }
-        
-        public id(): int {
-            int.Parse(content["id"].ToString())
-        }
-        
-        public method(): string {
-            content["method"].ToString()
         }
         
         static public waitMessage(): LSPRequestMessage {

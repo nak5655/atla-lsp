@@ -1,0 +1,27 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nemerle.Imperative;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Newtonsoft.Json.Linq;
+
+namespace Atla.LanguageServer
+{
+    public class LSPNotificationMessage: LSPMessage
+    {
+        public this(content: JObject) {
+            this.headers = headers;
+            this.content = content;
+        }
+        
+        public static windowLogMessage(message: string, type: MessageType): LSPNotificationMessage {
+            LSPNotificationMessage(JObject.FromObject(Notification("window/logMessage", LogMessageParams(type, message))))
+        }
+    }
+}
