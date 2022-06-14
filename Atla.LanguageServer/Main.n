@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Console;
 using System.Linq;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using Atla.LanguageServer;
 
 module Program
@@ -28,6 +31,25 @@ module Program
                 | notification is LSPNotificationMessage => match (notification.method()) {
                     | "initialized" => {
                         LSPNotificationMessage.windowLogMessage("initialized", MessageType.Info).sendMessage();
+                    }
+                    | "textDocument/didOpen" => {
+                        def uri = notification._params()["textDocument"]["uri"].ToString();
+                        def text = notification._params()["textDocument"]["text"].ToString();
+                        server.compile(uri, text);
+                        LSPNotificationMessage.windowLogMessage($"textDocument/didOpen $uri", MessageType.Info).sendMessage();
+                    }
+                    | "textDocument/didChange" => {
+                        def uri = notification._params()["textDocument"]["uri"].ToString();
+                        def changes = notification._params()["contentChanges"].ToArray();
+                        when (changes.Length > 0) {
+                            def text = changes.Last().ToString();
+                            server.compile(uri, text);
+                        }
+                        LSPNotificationMessage.windowLogMessage($"textDocument/didChange $uri", MessageType.Info).sendMessage();
+                    }
+                    | "textDocument/didClose" => {
+                        def uri = notification._params()["textDocument"]["uri"].ToString();
+                        LSPNotificationMessage.windowLogMessage($"textDocument/didClose $uri", MessageType.Info).sendMessage();
                     }
                     | _ => {}
                 }

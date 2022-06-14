@@ -19,14 +19,6 @@ namespace Atla.LanguageServer
         public mutable headers: Hashtable[string, string] = Hashtable();
         public mutable content: JObject;
         
-        public id(): int {
-            int.Parse(content["id"].ToString())
-        }
-        
-        public method(): string {
-            content["method"].ToString()
-        }
-        
         public calcContentLength(): void {
             headers.Add("Content-Length", Encoding.UTF8.GetBytes(content.ToString(Formatting.None)).Length.ToString());
         }

@@ -24,6 +24,14 @@ namespace Atla.LanguageServer
             this.content = content;
         }
         
+        public method(): string {
+            content["method"].ToString()
+        }
+        
+        public _params(): JToken {
+            content["params"]
+        }
+        
         public static windowLogMessage(message: string, type: MessageType): LSPNotificationMessage {
             LSPNotificationMessage(JObject.FromObject(Notification("window/logMessage", LogMessageParams(type, message))))
         }

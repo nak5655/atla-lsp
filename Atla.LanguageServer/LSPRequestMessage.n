@@ -19,5 +19,13 @@ namespace Atla.LanguageServer
             this.headers = headers;
             this.content = content;
         }
+        
+        public id(): int {
+            int.Parse(content["id"].ToString())
+        }
+        
+        public method(): string {
+            content["method"].ToString()
+        }
     }
 }

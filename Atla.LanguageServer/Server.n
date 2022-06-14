@@ -16,13 +16,23 @@ namespace Atla.LanguageServer
         mutable isInitialized: bool = false;
         
         public initialize(request: LSPRequestMessage): LSPResponseMessage {
-            def capabilities = ServerCapabilities();
+            def capabilities = ServerCapabilities(
+                documentHighlightProvider = true,
+                textDocumentSync = TextDocumentSyncOptions(
+                    openClose = true,
+                    change = TextDocumentSyncKind.Full,
+                )
+            );
             
             def assembly = Assembly.GetExecutingAssembly();
             def versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
             def serverInfo = ServerInfo("atla-lsp", versionInfo.FileVersion);
             
             LSPResponseMessage.initializeResult(request.id(), capabilities, serverInfo)
+        }
+        
+        public compile(uri: string, text: string): void {
+            
         }
     }
 }

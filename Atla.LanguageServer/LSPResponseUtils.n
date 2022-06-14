@@ -32,10 +32,36 @@ namespace Atla.LanguageServer
         public mutable serverInfo: ServerInfo;
     }
     
+    public enum TextDocumentSyncKind {
+        | None = 0
+        | Full = 1
+        | Incremental = 2
+    }
+    
+    [JsonObject]
+    public class TextDocumentSyncOptions {
+        [JsonProperty]
+        public mutable openClose: bool = true;
+        [JsonProperty]
+        public mutable change: TextDocumentSyncKind = TextDocumentSyncKind.Full;
+        
+        public this(openClose: bool, change: TextDocumentSyncKind) {
+            this.openClose = openClose;
+            this.change = change;
+        }
+    }
+    
     [JsonObject]
     public class ServerCapabilities {
         [JsonProperty]
         public mutable documentHighlightProvider: bool = false;
+        [JsonProperty]
+        public mutable textDocumentSync: TextDocumentSyncOptions;
+        
+        public this(documentHighlightProvider: bool, textDocumentSync: TextDocumentSyncOptions) {
+            this.documentHighlightProvider = documentHighlightProvider;
+            this.textDocumentSync = textDocumentSync;
+        }
     }
     
     [JsonObject]
