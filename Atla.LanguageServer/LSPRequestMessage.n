@@ -1,0 +1,57 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nemerle.Imperative;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Newtonsoft.Json.Linq;
+
+namespace Atla.LanguageServer
+{
+    public class LSPRequestMessage: LSPMessage
+    {
+        public headers: Hashtable[string, string];
+        public content: JObject;
+        
+        public this(headers: Hashtable[string, string], content: JObject) {
+            this.headers = headers;
+            this.content = content;
+        }
+        
+        public id(): int {
+            int.Parse(content["id"].ToString())
+        }
+        
+        public method(): string {
+            content["method"].ToString()
+        }
+        
+        static public waitMessage(): LSPRequestMessage {
+            def headers = Hashtable();
+            while (true) {
+                def line = Console.ReadLine();
+                when (line.Length == 0)
+                    break;
+                
+                def keyValue = line.Split(array[": "], 2, StringSplitOptions.None);
+                when (keyValue.Length != 2)
+                    break;
+                
+                headers.Add(keyValue.First(), keyValue.Last());
+            }
+            
+            def contentLength = int.Parse(headers.Get("Content-Length").GetValueOrDefault());
+            def sb = StringBuilder();
+            for (mutable i = 0; i < contentLength; i++) {
+                _ = sb.Append(Console.Read() :> char);
+            }
+            
+            LSPRequestMessage(headers, JObject.Parse(sb.ToString()))
+        }
+    }
+}

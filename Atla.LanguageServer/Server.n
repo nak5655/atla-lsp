@@ -1,0 +1,28 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Diagnostics;
+
+namespace Atla.LanguageServer
+{
+    public class Server
+    {
+        mutable isInitialized: bool = false;
+        
+        public initialize(request: LSPRequestMessage): LSPResponseMessage {
+            def capabilities = ServerCapabilities();
+            
+            def assembly = Assembly.GetExecutingAssembly();
+            def versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            def serverInfo = ServerInfo("atla-lsp", versionInfo.FileVersion);
+            
+            LSPResponseMessage.initializeResult(request.id(), capabilities, serverInfo)
+        }
+    }
+}

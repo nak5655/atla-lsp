@@ -1,0 +1,55 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Newtonsoft.Json;
+
+namespace Atla.LanguageServer
+{
+    [JsonObject]
+    public class Response {
+        [JsonProperty]
+        public jsonrpc: string = "2.0";
+        [JsonProperty]
+        public id: int;
+        [JsonProperty]
+        public result: object;
+        
+        public this(id: int, result: object) {
+            this.id = id;
+            this.result = result;
+        }
+    }
+    
+    [JsonObject]
+    public class InitializeResult {
+        [JsonProperty]
+        public mutable capabilities: ServerCapabilities;
+        [JsonProperty]
+        public mutable serverInfo: ServerInfo;
+    }
+    
+    [JsonObject]
+    public class ServerCapabilities {
+        [JsonProperty]
+        public mutable documentHighlightProvider: bool = false;
+    }
+    
+    [JsonObject("ServerInfo")]
+    public class ServerInfo {
+        [JsonProperty]
+        public mutable name: string;
+        [JsonProperty]
+        public mutable version: string;
+        
+        public this(name: string, version: string) {
+            this.name = name;
+            this.version = version;
+        }
+    }
+}
