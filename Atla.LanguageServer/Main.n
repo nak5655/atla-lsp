@@ -16,15 +16,24 @@ module Program
         def server = Server();
         
         while (true) {
-            def req = LSPRequestMessage.waitMessage();
+            def message = LSPMessage.waitMessage();
             
-            match (req.method()) {
-                | "initialize" => {
-                    server.initialize(req).sendMessage();
-                    LSPNotificationMessage.windowLogMessage("initialized", MessageType.Info).sendMessage();
+            match (message) {
+                | request is LSPRequestMessage => match (request.method()) {
+                    | "initialize" => {
+                        server.initialize(request).sendMessage();
+                    }
+                    | _ => {}
+                }
+                | notification is LSPNotificationMessage => match (notification.method()) {
+                    | "initialized" => {
+                        LSPNotificationMessage.windowLogMessage("initialized", MessageType.Info).sendMessage();
+                    }
+                    | _ => {}
                 }
                 | _ => {}
             }
+            
         }
     }
 }

@@ -16,6 +16,10 @@ namespace Atla.LanguageServer
     public class LSPNotificationMessage: LSPMessage
     {
         public this(content: JObject) {
+            this.content = content;
+        }
+        
+        public this(headers: Hashtable[string, string], content: JObject) {
             this.headers = headers;
             this.content = content;
         }

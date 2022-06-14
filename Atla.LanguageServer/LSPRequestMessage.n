@@ -19,28 +19,5 @@ namespace Atla.LanguageServer
             this.headers = headers;
             this.content = content;
         }
-        
-        static public waitMessage(): LSPRequestMessage {
-            def headers = Hashtable();
-            while (true) {
-                def line = Console.ReadLine();
-                when (line.Length == 0)
-                    break;
-                
-                def keyValue = line.Split(array[": "], 2, StringSplitOptions.None);
-                when (keyValue.Length != 2)
-                    break;
-                
-                headers.Add(keyValue.First(), keyValue.Last());
-            }
-            
-            def contentLength = int.Parse(headers.Get("Content-Length").GetValueOrDefault());
-            def sb = StringBuilder();
-            for (mutable i = 0; i < contentLength; i++) {
-                _ = sb.Append(Console.Read() :> char);
-            }
-            
-            LSPRequestMessage(headers, JObject.Parse(sb.ToString()))
-        }
     }
 }

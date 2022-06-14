@@ -43,5 +43,33 @@ namespace Atla.LanguageServer
             
             Console.Write(content.ToString(Formatting.None));
         }
+        
+        static public waitMessage(): LSPMessage {
+            def headers = Hashtable();
+            while (true) {
+                def line = Console.ReadLine();
+                when (line.Length == 0)
+                    break;
+                
+                def keyValue = line.Split(array[": "], 2, StringSplitOptions.None);
+                when (keyValue.Length != 2)
+                    break;
+                
+                headers.Add(keyValue.First(), keyValue.Last());
+            }
+            
+            def contentLength = int.Parse(headers.Get("Content-Length").GetValueOrDefault());
+            def sb = StringBuilder();
+            for (mutable i = 0; i < contentLength; i++) {
+                _ = sb.Append(Console.Read() :> char);
+            }
+            
+            def json = JObject.Parse(sb.ToString());
+            
+            if (json.ContainsKey("id"))
+                LSPRequestMessage(headers, json)
+            else
+                LSPNotificationMessage(headers, json)
+        }
     }
 }
