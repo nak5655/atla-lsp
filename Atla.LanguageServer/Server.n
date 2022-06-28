@@ -1,7 +1,11 @@
-﻿using Nemerle;
+﻿using Atla.Lang.Parser;
+using Atla.Lang.Parse;
+
+using Nemerle;
 using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
+using Nemerle.Imperative;
 
 using System;
 using System.Collections.Generic;
@@ -14,8 +18,16 @@ namespace Atla.LanguageServer
     public class Server
     {
         mutable isInitialized: bool = false;
+        public mutable isAvailablePublishDiagnostics: bool = false;
         
         public initialize(request: LSPRequestMessage): LSPResponseMessage {
+            // check the client supoports publishDiagnostics.
+            isAvailablePublishDiagnostics = try {
+                request.content["params"]["capabilities"]["textDocument"]["publishDiagnostics"]["relatedInformation"].ToString().ToLower() == "true"
+            } catch {
+                | _ => false
+            };
+            
             def capabilities = ServerCapabilities(
                 documentHighlightProvider = true,
                 textDocumentSync = TextDocumentSyncOptions(
@@ -32,7 +44,70 @@ namespace Atla.LanguageServer
         }
         
         public compile(uri: string, text: string): void {
+            when (!isAvailablePublishDiagnostics)
+                return;
             
+            def lexer = Lexer();
+            match (lexer.tokenize(text)) {
+                | Result.Success(tokens, _) => {
+                    def parser = Parser();
+                    match (parser.mod.parse(TokenInput(tokens, 0))) {
+                        | Result.Success(ast, _) => {
+                            def moduleName = "main"; // TODO
+                            def hir = Atla.Lang.Ast.Trans().trans(ast, moduleName);
+                            def diagnostics = ast.scanErrors().Select((e, s) => {
+                                Diagnostic(spanToRange(s), e)
+                            }).Concat(hir.scanErrors().Select((e,s) => {
+                                Diagnostic(spanToRange(s), e.ToString())
+                            }));
+                            
+                            LSPNotificationMessage.publishDiagnostics(uri, diagnostics.ToList().ToNList()).sendMessage();
+                        }
+                        | Result.Failure(reason, failAt) => {
+                            def start = try {
+                                def p = failAt.position() :> option[Atla.Lang.Parse.Span];
+                                Atla.LanguageServer.Position(p.Value.lo.line, p.Value.lo.col)
+                            } catch {
+                                | _ => Atla.LanguageServer.Position(0, 0)
+                            };
+                            def end = try {
+                                def p = failAt.position() :> option[Atla.Lang.Parse.Span];
+                                Atla.LanguageServer.Position(p.Value.hi.line, p.Value.hi.col)
+                            } catch {
+                                | _ => Atla.LanguageServer.Position(text.Count(c => c == '\n'), text.Length - text.LastIndexOf('\n') + 1) // end of text
+                            };
+                    
+                            LSPNotificationMessage.publishDiagnostics(uri, [
+                                Diagnostic(Range(start, end), reason)
+                            ]).sendMessage();
+                        }
+                    }
+                }
+                | Result.Failure(reason, failAt) => {
+                    def start = try {
+                        def p = failAt.position() :> Atla.Lang.Parse.Position;
+                        Atla.LanguageServer.Position(p.line, p.col)
+                    } catch {
+                        | _ => Atla.LanguageServer.Position(0, 0)
+                    };
+                    def end = try {
+                        def p = failAt.position() :> Atla.Lang.Parse.Position;
+                        Atla.LanguageServer.Position(p.line, p.col + 1)
+                    } catch {
+                        | _ => Atla.LanguageServer.Position(text.Count(c => c == '\n'), text.Length - text.LastIndexOf('\n') + 1) // end of text
+                    };
+                    
+                    LSPNotificationMessage.publishDiagnostics(uri, [
+                        Diagnostic(Range(start, end), reason)
+                    ]).sendMessage();
+                }
+            }
+        }
+        
+        spanToRange(span: Atla.Lang.Parse.Span): Range {
+            def start = Atla.LanguageServer.Position(span.lo.line, span.lo.col);
+            def end = Atla.LanguageServer.Position(span.hi.line, span.hi.col);
+            Range(start, end)
         }
     }
 }

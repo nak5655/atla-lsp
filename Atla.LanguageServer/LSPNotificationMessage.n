@@ -35,5 +35,9 @@ namespace Atla.LanguageServer
         public static windowLogMessage(message: string, type: MessageType): LSPNotificationMessage {
             LSPNotificationMessage(JObject.FromObject(Notification("window/logMessage", LogMessageParams(type, message))))
         }
+        
+        public static publishDiagnostics(uri: string, diagnostics: list[Diagnostic]): LSPNotificationMessage {
+            LSPNotificationMessage(JObject.FromObject(Notification("textDocument/publishDiagnostics", PublishDiagnosticsParams(uri, diagnostics))))
+        }
     }
 }

@@ -38,6 +38,11 @@
     <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Atla.Lang, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <Name>Atla.Lang</Name>
+      <AssemblyName>Atla.Lang.dll</AssemblyName>
+      <HintPath>..\..\atla-lang\Atla.Lang\bin\Release\Atla.Lang.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <Name>Newtonsoft.Json</Name>

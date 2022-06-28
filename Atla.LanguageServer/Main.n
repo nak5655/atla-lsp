@@ -31,6 +31,10 @@ module Program
                 | notification is LSPNotificationMessage => match (notification.method()) {
                     | "initialized" => {
                         LSPNotificationMessage.windowLogMessage("initialized", MessageType.Info).sendMessage();
+                        
+                        when (!server.isAvailablePublishDiagnostics) {
+                            LSPNotificationMessage.windowLogMessage("PublishDiagnostics is not available.", MessageType.Info).sendMessage();
+                        }
                     }
                     | "textDocument/didOpen" => {
                         def uri = notification._params()["textDocument"]["uri"].ToString();

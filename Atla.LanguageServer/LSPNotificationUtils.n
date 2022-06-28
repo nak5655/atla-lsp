@@ -43,4 +43,49 @@ namespace Atla.LanguageServer
             this.message = message;
         }
     }
+    
+    [JsonObject]
+    public class PublishDiagnosticsParams {
+        [JsonProperty]
+        public uri: string;
+        [JsonProperty]
+        public diagnostics: list[Diagnostic];
+        
+        public this(uri: string, diagnostics: list[Diagnostic]) {
+            this.uri = uri;
+            this.diagnostics = diagnostics;
+        }
+    }
+    
+    [JsonObject]
+    public class Diagnostic {
+        [JsonProperty]
+        public range: Range;
+        [JsonProperty]
+        public message: string;
+        // TODO ...
+        
+        public this(range: Range, message: string) {
+            this.range = range;
+            this.message = message;
+        }
+    }
+    
+    [Record]
+    [JsonObject]
+    public class Range {
+        [JsonProperty]
+        public start: Position;
+        [JsonProperty]
+        public end: Position; // not included
+    }
+    
+    [Record]
+    [JsonObject]
+    public class Position {
+        [JsonProperty]
+        public line: int; // first line is 0.
+        [JsonProperty]
+        public character: int; // represent the right side of the character
+    }
 }
