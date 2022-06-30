@@ -27,5 +27,9 @@ namespace Atla.LanguageServer
         public method(): string {
             content["method"].ToString()
         }
+        
+        public _params(): JToken {
+            content["params"]
+        }
     }
 }

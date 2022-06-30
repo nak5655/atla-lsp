@@ -3,3 +3,4 @@ obj/
 packages/
 .vs/
 /Atla.LanguageServer/bin/Debug
+/Test/bin/Debug

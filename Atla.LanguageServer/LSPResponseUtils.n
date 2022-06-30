@@ -52,15 +52,47 @@ namespace Atla.LanguageServer
     }
     
     [JsonObject]
+    public class SemanticTokensLegend {
+        [JsonProperty]
+        public mutable tokenTypes: list[string];
+        [JsonProperty]
+        public mutable tokenModifiers: list[string];
+        
+        public this(tokenTypes: list[string], tokenModifiers: list[string]) {
+            this.tokenTypes = tokenTypes;
+            this.tokenModifiers = tokenModifiers;
+        }
+    }
+    
+    [JsonObject]
+    public class SemanticTokensOptions {
+        [JsonProperty]
+        public mutable legend: SemanticTokensLegend;
+        [JsonProperty]
+        public mutable range: bool;
+        [JsonProperty]
+        public mutable full: bool;
+        
+        public this(legend: SemanticTokensLegend, range: bool, full: bool) {
+            this.legend = legend;
+            this.range = range;
+            this.full = full;
+        }
+    }
+    
+    [JsonObject]
     public class ServerCapabilities {
         [JsonProperty]
         public mutable documentHighlightProvider: bool = false;
         [JsonProperty]
         public mutable textDocumentSync: TextDocumentSyncOptions;
+        [JsonProperty]
+        public mutable semanticTokensProvider: SemanticTokensOptions; 
         
-        public this(documentHighlightProvider: bool, textDocumentSync: TextDocumentSyncOptions) {
+        public this(documentHighlightProvider: bool, textDocumentSync: TextDocumentSyncOptions, semanticTokensProvider: SemanticTokensOptions) {
             this.documentHighlightProvider = documentHighlightProvider;
             this.textDocumentSync = textDocumentSync;
+            this.semanticTokensProvider = semanticTokensProvider;
         }
     }
     
@@ -74,6 +106,19 @@ namespace Atla.LanguageServer
         public this(name: string, version: string) {
             this.name = name;
             this.version = version;
+        }
+    }
+    
+    [JsonObject]
+    public class SemanticTokens {
+        [JsonProperty]
+        public mutable resultId: string; // nullable
+        [JsonProperty]
+        public mutable data: list[uint];
+        
+        public this(resultId: string, data: list[uint]) {
+            this.resultId = resultId;
+            this.data = data;
         }
     }
 }

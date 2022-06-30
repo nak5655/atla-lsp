@@ -1,22 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\NUnit.3.13.3\build\NUnit.props" Condition="Exists('..\packages\NUnit.3.13.3\build\NUnit.props')" />
+  <Import Project="..\packages\NUnit3TestAdapter.4.2.1\build\net35\NUnit3TestAdapter.props" Condition="Exists('..\packages\NUnit3TestAdapter.4.2.1\build\net35\NUnit3TestAdapter.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>20278824-b782-4436-9ab3-eb42e27d36d4</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>9ac73345-64d9-4691-9b1d-141cdca289c3</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Atla.LanguageServer</RootNamespace>
-    <AssemblyName>atla-lsp</AssemblyName>
+    <RootNamespace>Test</RootNamespace>
+    <AssemblyName>Test</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NoStdLib>true</NoStdLib>
     <NemerleVersion>Net-4.0</NemerleVersion>
     <NemerleBinPathRoot Condition=" '$(NemerleBinPathRoot)' == '' ">$(ProgramFiles)\Nemerle</NemerleBinPathRoot>
     <Nemerle Condition=" '$(Nemerle)' == '' ">$(NemerleBinPathRoot)\$(NemerleVersion)</Nemerle>
-    <Name>Atla.LanguageServer</Name>
+    <Name>Test</Name>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
     <StartupObject />
     <ApplicationIcon />
   </PropertyGroup>
@@ -39,10 +43,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-      <Name>Newtonsoft.Json</Name>
-      <AssemblyName>Newtonsoft.Json.dll</AssemblyName>
-      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="nunit.framework, Version=3.13.3.0, Culture=neutral, PublicKeyToken=2638cd05610744eb">
+      <Name>nunit.framework</Name>
+      <AssemblyName>nunit.framework.dll</AssemblyName>
+      <HintPath>..\packages\NUnit.3.13.3\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -66,46 +70,32 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ServerTest.n" />
     <Compile Include="Properties\AssemblyInfo.n" />
-    <Compile Include="LSPMessage.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LSPNotificationUtils.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LSPNotificationMessage.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LSPResponseUtils.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LSPResponseMessage.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LSPRequestMessage.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Server.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Main.n" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Atla.LanguageServer\Atla.LanguageServer.nproj">
+      <Name>Atla.LanguageServer</Name>
+      <Project>{20278824-b782-4436-9ab3-eb42e27d36d4}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\atla-lang\Atla.Lang\Atla.Lang.nproj">
-      <Name>Atla.Lang</Name>
-      <Project>{36ee31ad-c404-4f33-a3e5-887d27f3bed0}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\NUnit3TestAdapter.4.2.1\build\net35\NUnit3TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NUnit3TestAdapter.4.2.1\build\net35\NUnit3TestAdapter.props'))" />
+    <Error Condition="!Exists('..\packages\NUnit.3.13.3\build\NUnit.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NUnit.3.13.3\build\NUnit.props'))" />
+  </Target>
   <!--
 		To modify your build process, add your task inside one of the targets below and uncomment it. 
 		Other similar extension points exist, see Microsoft.Common.targets.

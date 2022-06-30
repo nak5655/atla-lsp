@@ -28,5 +28,12 @@ namespace Atla.LanguageServer
             
             LSPResponseMessage(JObject.FromObject(json))
         }
+        
+        public static semanticTokens(id: int, data: list[uint]): LSPResponseMessage {
+            def res = SemanticTokens(null, data);
+            def json = Response(id, res);
+            
+            LSPResponseMessage(JObject.FromObject(json))
+        }
     }
 }

@@ -1,0 +1,25 @@
+﻿using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.Collections.Generic;
+using System.Console;
+using System.Linq;
+
+using Atla.LanguageServer;
+using NUnit.Framework;
+
+[TestFixture]
+class ServerTest
+{
+    [Test]
+    public tokenizeTest(): void {
+        def server = Server();
+        server.tokenTypes = array["keyword", "number", "string", "variable"];
+        
+        server.compile("", "fn a(b: Int): Int = \"aaa\"");
+        def tokens = server.tokenize("");
+        tokens
+    }
+}

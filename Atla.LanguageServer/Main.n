@@ -26,6 +26,11 @@ module Program
                     | "initialize" => {
                         server.initialize(request).sendMessage();
                     }
+                    | "textDocument/semanticTokens/full" => {
+                        def uri = request._params()["textDocument"]["uri"].ToString();
+                        def data = server.tokenize(uri);
+                        LSPResponseMessage.semanticTokens(request.id(), data).sendMessage();
+                    }
                     | _ => {}
                 }
                 | notification is LSPNotificationMessage => match (notification.method()) {
@@ -46,7 +51,7 @@ module Program
                         def uri = notification._params()["textDocument"]["uri"].ToString();
                         def changes = notification._params()["contentChanges"].ToArray();
                         when (changes.Length > 0) {
-                            def text = changes.Last().ToString();
+                            def text = changes.Last()["text"].ToString();
                             server.compile(uri, text);
                         }
                         LSPNotificationMessage.windowLogMessage($"textDocument/didChange $uri", MessageType.Info).sendMessage();

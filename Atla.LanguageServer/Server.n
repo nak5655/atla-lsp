@@ -13,12 +13,18 @@ using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace Atla.LanguageServer
 {
     public class Server
     {
         mutable isInitialized: bool = false;
         public mutable isAvailablePublishDiagnostics: bool = false;
+        public mutable tokenTypes: array[string] = array[];
+        
+        buffers: Hashtable[string, string] = Hashtable();
         
         public initialize(request: LSPRequestMessage): LSPResponseMessage {
             // check the client supoports publishDiagnostics.
@@ -26,13 +32,31 @@ namespace Atla.LanguageServer
                 request.content["params"]["capabilities"]["textDocument"]["publishDiagnostics"]["relatedInformation"].ToString().ToLower() == "true"
             } catch {
                 | _ => false
+            }
+            def supportedTokenTypes = try {
+                request.content["params"]["capabilities"]["textDocument"]["semanticTokens"]["tokenTypes"].Map(_.ToString())
+            } catch {
+                | _ => []
             };
+            
+            // available TokenTypes = client TokenTypes ∩ server TokenTypes
+            tokenTypes = [
+                "keyword",
+                "string",
+                "number",
+                "variable"
+            ].Intersect(supportedTokenTypes).ToArray();
             
             def capabilities = ServerCapabilities(
                 documentHighlightProvider = true,
                 textDocumentSync = TextDocumentSyncOptions(
                     openClose = true,
                     change = TextDocumentSyncKind.Full,
+                ),
+                semanticTokensProvider = SemanticTokensOptions(
+                    legend = SemanticTokensLegend(tokenTypes.ToNList(), []), // TODO
+                    range = false,
+                    full = true,
                 )
             );
             
@@ -43,7 +67,54 @@ namespace Atla.LanguageServer
             LSPResponseMessage.initializeResult(request.id(), capabilities, serverInfo)
         }
         
+        public tokenize(uri: string): list[uint] {
+            when (!buffers.ContainsKey(uri))
+                return [];
+            
+            def text = buffers[uri];
+            
+            _tokenize(text)
+        }
+        
+        public _tokenize(text: string): list[uint] {
+            def lexer = Lexer();
+            match (lexer.tokenize(text)) {
+                | Result.Success(tokens, _) => {
+                    mutable line = 0;
+                    mutable col = 0;
+                    def data = List();
+                    foreach (token in tokens) {
+                        def tline = token.span.lo.line;
+                        def tcol = token.span.lo.col;
+                        def tlen = token.span.hi.index - token.span.lo.index;
+                        
+                        def tokenType = match (token) {
+                            | Token.Delim(s) when char.IsLetter(s.First()) => Some("keyword")
+                            | Token.Int => Some("number")
+                            | Token.String => Some("string")
+                            | Token.Id => Some("variable")
+                            | _ => None()
+                        }
+                        
+                        def dline = tline - line;
+                        def dcol = if (dline == 0) tcol - col else tcol;
+                        
+                        when (tokenType.IsSome && tokenTypes.Contains(tokenType.Value)) {
+                            data.AddRange([dline, dcol, tlen, Array.IndexOf(tokenTypes, tokenType.Value), 0].Map(Convert.ToUInt32(_)));
+                            line = token.span.lo.line;
+                            col = token.span.lo.col;
+                        }
+                    }
+                    data.ToNList()
+                }
+                | Result.Failure => []
+            }
+        }
+        
+        // TODO PublishDiagnosticsParamsを返す?
         public compile(uri: string, text: string): void {
+            buffers[uri] = text;
+            
             when (!isAvailablePublishDiagnostics)
                 return;
             
@@ -61,7 +132,9 @@ namespace Atla.LanguageServer
                                 Diagnostic(spanToRange(s), e.ToString())
                             }));
                             
+                            // 診断メッセージ置き換え(空配列ならクリアになる)
                             LSPNotificationMessage.publishDiagnostics(uri, diagnostics.ToList().ToNList()).sendMessage();
+                            LSPNotificationMessage.windowLogMessage($"Parse>Success>CountDiagnostics> $(diagnostics.Count())", MessageType.Log).sendMessage();
                         }
                         | Result.Failure(reason, failAt) => {
                             def start = try {
@@ -80,6 +153,7 @@ namespace Atla.LanguageServer
                             LSPNotificationMessage.publishDiagnostics(uri, [
                                 Diagnostic(Range(start, end), reason)
                             ]).sendMessage();
+                            LSPNotificationMessage.windowLogMessage("Parse>Failure> ", MessageType.Log).sendMessage();
                         }
                     }
                 }
@@ -100,6 +174,7 @@ namespace Atla.LanguageServer
                     LSPNotificationMessage.publishDiagnostics(uri, [
                         Diagnostic(Range(start, end), reason)
                     ]).sendMessage();
+                    LSPNotificationMessage.windowLogMessage("Lexer>Failure> ", MessageType.Log).sendMessage();
                 }
             }
         }
