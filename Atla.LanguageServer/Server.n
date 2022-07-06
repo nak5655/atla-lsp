@@ -76,6 +76,7 @@ namespace Atla.LanguageServer
             _tokenize(text)
         }
         
+        // テスト用
         public _tokenize(text: string): list[uint] {
             def lexer = Lexer();
             match (lexer.tokenize(text)) {
@@ -119,6 +120,7 @@ namespace Atla.LanguageServer
                 return;
             
             def lexer = Lexer();
+
             match (lexer.tokenize(text)) {
                 | Result.Success(tokens, _) => {
                     def parser = Parser();
@@ -126,9 +128,11 @@ namespace Atla.LanguageServer
                         | Result.Success(ast, _) => {
                             def moduleName = "main"; // TODO
                             def hir = Atla.Lang.Ast.Trans().trans(ast, moduleName);
+                            Atla.Lang.Hir.Typing().typing(hir);
+                            
                             def diagnostics = ast.scanErrors().Select((e, s) => {
                                 Diagnostic(spanToRange(s), e)
-                            }).Concat(hir.scanErrors().Select((e,s) => {
+                            }).Concat(hir.scanErrors().Distinct().Select((e,s) => {
                                 Diagnostic(spanToRange(s), e.ToString())
                             }));
                             

@@ -17,6 +17,7 @@ class ServerTest
     public tokenizeTest(): void {
         def server = Server();
         server.tokenTypes = array["keyword", "number", "string", "variable"];
+        server.isAvailablePublishDiagnostics = true;
         
         server.compile("", "fn a(b: Int): Int = \"aaa\"");
         def tokens = server.tokenize("");
