@@ -16,10 +16,10 @@ class ServerTest
     [Test]
     public tokenizeTest(): void {
         def server = Server();
-        server.tokenTypes = array["keyword", "number", "string", "variable"];
+        server.tokenTypes = array["keyword", "comment", "number", "string", "variable"];
         server.isAvailablePublishDiagnostics = true;
         
-        server.compile("", "fn a(b: Int): Int = \"aaa\"");
+        server.compile("", "fn a(b: Int): Int = \"aaa\"#");
         def tokens = server.tokenize("");
         tokens
     }

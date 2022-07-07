@@ -42,9 +42,11 @@ namespace Atla.LanguageServer
             // available TokenTypes = client TokenTypes ∩ server TokenTypes
             tokenTypes = [
                 "keyword",
+                "comment",
                 "string",
                 "number",
-                "variable"
+                "variable",
+                "type"
             ].Intersect(supportedTokenTypes).ToArray();
             
             def capabilities = ServerCapabilities(
@@ -87,19 +89,33 @@ namespace Atla.LanguageServer
                     foreach (token in tokens) {
                         def tline = token.span.lo.line;
                         def tcol = token.span.lo.col;
-                        def tlen = token.span.hi.index - token.span.lo.index;
+                        mutable tlen = token.span.hi.index - token.span.lo.index;
                         
                         def tokenType = match (token) {
                             | Token.Delim(s) when char.IsLetter(s.First()) => Some("keyword")
+                            | Token.Comment => Some("comment")
                             | Token.Int => Some("number")
                             | Token.String => Some("string")
-                            | Token.Id => Some("variable")
+                            | Token.Id(s) => if (char.IsUpper(s.First())) Some("type") else Some("variable") // TODO
                             | _ => None()
                         }
                         
-                        def dline = tline - line;
-                        def dcol = if (dline == 0) tcol - col else tcol;
+                        mutable dline = tline - line;
+                        mutable dcol = if (dline == 0) tcol - col else tcol;
                         
+                        when (tlen < 0) {
+                            LSPNotificationMessage.windowLogMessage($"$token has an illegal span: $token.span", MessageType.Log).sendMessage();
+                            tlen = 0;
+                        }
+                        when (dline < 0) {
+                            LSPNotificationMessage.windowLogMessage($"$token has an illegal span: $token.span", MessageType.Log).sendMessage();
+                            dline = 0;
+                        }
+                        when (dcol < 0) {
+                            LSPNotificationMessage.windowLogMessage($"$token has an illegal span: $token.span", MessageType.Log).sendMessage();
+                            dcol = 0;
+                        }
+                         
                         when (tokenType.IsSome && tokenTypes.Contains(tokenType.Value)) {
                             data.AddRange([dline, dcol, tlen, Array.IndexOf(tokenTypes, tokenType.Value), 0].Map(Convert.ToUInt32(_)));
                             line = token.span.lo.line;
