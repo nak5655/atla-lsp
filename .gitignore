@@ -4,3 +4,5 @@ packages/
 .vs/
 /Atla.LanguageServer/bin/Debug
 /Test/bin/Debug
+/Atla.LanguageServer/bin/Release
+/Test/bin/Release

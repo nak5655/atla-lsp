@@ -1,5 +1,6 @@
 ﻿using Atla.Lang.Parser;
 using Atla.Lang.Parse;
+using Atla.Lang.Hir;
 
 using Nemerle;
 using Nemerle.Collections;
@@ -25,6 +26,10 @@ namespace Atla.LanguageServer
         public mutable tokenTypes: array[string] = array[];
         
         buffers: Hashtable[string, string] = Hashtable();
+        
+        mutable compiler: option[Atla.Lang.Compiler] = None();
+        mutable asm: option[Atla.Lang.Hir.Assembly] = None();
+        compileProblems: List[Atla.Lang.Problem] = List();
         
         public initialize(request: LSPRequestMessage): LSPResponseMessage {
             // check the client supoports publishDiagnostics.
@@ -78,7 +83,7 @@ namespace Atla.LanguageServer
             _tokenize(text)
         }
         
-        // テスト用
+        // テストしやすいように関数を分けた
         public _tokenize(text: string): list[uint] {
             def lexer = Lexer();
             match (lexer.tokenize(text)) {
@@ -135,67 +140,25 @@ namespace Atla.LanguageServer
             when (!isAvailablePublishDiagnostics)
                 return;
             
-            def lexer = Lexer();
+            when (compiler.IsNone) {
+                compiler = Some(Atla.Lang.Compiler(problem => {
+                    compileProblems.Add(problem);
+                }));
+            }
+            
+            when (asm.IsNone) {
+                asm = Some(Atla.Lang.Hir.Assembly("Application", "Application.exe")); // TODO
+                asm.Value.scope = Atla.Lang.Hir.Scope.Assembly(Atla.Lang.Hir.Scope.Global(), "Application"); // TODO
+            }
 
-            match (lexer.tokenize(text)) {
-                | Result.Success(tokens, _) => {
-                    def parser = Parser();
-                    match (parser.mod.parse(TokenInput(tokens, 0))) {
-                        | Result.Success(ast, _) => {
-                            def moduleName = "main"; // TODO
-                            def hir = Atla.Lang.Ast.Trans().trans(ast, moduleName);
-                            Atla.Lang.Hir.Typing().typing(hir);
-                            
-                            def diagnostics = ast.scanErrors().Select((e, s) => {
-                                Diagnostic(spanToRange(s), e)
-                            }).Concat(hir.scanErrors().Distinct().Select((e,s) => {
-                                Diagnostic(spanToRange(s), e.ToString())
-                            }));
-                            
-                            // 診断メッセージ置き換え(空配列ならクリアになる)
-                            LSPNotificationMessage.publishDiagnostics(uri, diagnostics.ToList().ToNList()).sendMessage();
-                            LSPNotificationMessage.windowLogMessage($"Parse>Success>CountDiagnostics> $(diagnostics.Count())", MessageType.Log).sendMessage();
-                        }
-                        | Result.Failure(reason, failAt) => {
-                            def start = try {
-                                def p = failAt.position() :> option[Atla.Lang.Parse.Span];
-                                Atla.LanguageServer.Position(p.Value.lo.line, p.Value.lo.col)
-                            } catch {
-                                | _ => Atla.LanguageServer.Position(0, 0)
-                            };
-                            def end = try {
-                                def p = failAt.position() :> option[Atla.Lang.Parse.Span];
-                                Atla.LanguageServer.Position(p.Value.hi.line, p.Value.hi.col)
-                            } catch {
-                                | _ => Atla.LanguageServer.Position(text.Count(c => c == '\n'), text.Length - text.LastIndexOf('\n') + 1) // end of text
-                            };
-                    
-                            LSPNotificationMessage.publishDiagnostics(uri, [
-                                Diagnostic(Range(start, end), reason)
-                            ]).sendMessage();
-                            LSPNotificationMessage.windowLogMessage("Parse>Failure> ", MessageType.Log).sendMessage();
-                        }
-                    }
-                }
-                | Result.Failure(reason, failAt) => {
-                    def start = try {
-                        def p = failAt.position() :> Atla.Lang.Parse.Position;
-                        Atla.LanguageServer.Position(p.line, p.col)
-                    } catch {
-                        | _ => Atla.LanguageServer.Position(0, 0)
-                    };
-                    def end = try {
-                        def p = failAt.position() :> Atla.Lang.Parse.Position;
-                        Atla.LanguageServer.Position(p.line, p.col + 1)
-                    } catch {
-                        | _ => Atla.LanguageServer.Position(text.Count(c => c == '\n'), text.Length - text.LastIndexOf('\n') + 1) // end of text
-                    };
-                    
-                    LSPNotificationMessage.publishDiagnostics(uri, [
-                        Diagnostic(Range(start, end), reason)
-                    ]).sendMessage();
-                    LSPNotificationMessage.windowLogMessage("Lexer>Failure> ", MessageType.Log).sendMessage();
-                }
+            def filePath = string(uri.Replace('\\', '/').Skip(8).SkipWhile(c => c != '/').ToArray()); // file:///c%3A みたいなのが最初にあるので取り除く
+            def root = string(System.IO.Directory.GetCurrentDirectory().Replace('\\', '/').SkipWhile(c => c != '/').ToArray()); // c: を取り除く
+            if (filePath.StartsWith(root)) {
+                def rel = string(uri.Skip(root.Length).ToArray());
+                def modPath = string.Join(Atla.Lang.Consts.MODULE_SEP, rel.Split([System.IO.Path.DirectorySeparatorChar].ToArray()));
+                _ = compiler.Value.updateModule(asm.Value, modPath, text);
+            } else {
+                LSPNotificationMessage.publishDiagnostics(uri, [Diagnostic(spanToRange(Span.zero()), $"filePath is not a sub path of the root direcotry at $root.")]).sendMessage()
             }
         }
         
